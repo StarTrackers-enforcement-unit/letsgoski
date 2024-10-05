@@ -249,6 +249,7 @@ function visualizeNearbyObjects(nearbyObjects) {
 
 function updatePlanetPositions(objects) {
     objects.forEach(object => {
+        console.log(object)
         const { orbitRadius, orbitSpeed, inclination } = object.userData;
         if (orbitRadius && orbitSpeed) {
             const time = Date.now() * orbitSpeed;
@@ -261,6 +262,7 @@ function updatePlanetPositions(objects) {
         }
     });
 }
+
 
 
 function onWindowResize() {
