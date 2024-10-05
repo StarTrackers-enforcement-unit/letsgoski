@@ -236,7 +236,7 @@ function visualizeNearbyObjects(nearbyObjects) {
 
     // Create a single geometry and material for all nearby objects
     const geometry = new THREE.SphereGeometry(1, 8, 8); // Reduced segment count
-    const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    
 
     // Create a single BufferGeometry for all connecting lines
     /* const lineGeometry = new THREE.BufferGeometry();
@@ -244,6 +244,7 @@ function visualizeNearbyObjects(nearbyObjects) {
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1 });
  */
     nearbyObjects.slice(0, maxObjects).forEach((nearbyPlanet) => {
+        const material = new THREE.MeshBasicMaterial(getColorByTemperature(parseFloat(nearbyPlanet.st_teff) || 7500));
         const mesh = new THREE.Mesh(geometry, material);
         
         // Use the object's properties to determine its position
