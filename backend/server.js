@@ -1,6 +1,9 @@
 const express = require('express');
 const request = require('request');
 const cors = require('cors');
+const NodeCache = require('node-cache'); // Import Node-cache
+const cache = new NodeCache({ stdTTL: 600 }); // Cache entries will expire after 600 seconds (10 minutes)
+
 const app = express();
 
 // Enable CORS for all requests
@@ -26,6 +29,16 @@ app.get('/exoplanet', (req, res) => {
         return res.status(400).send('Exoplanet name is required.');
     }
 
+    const cachedExoplanetData = cache.get(`exoplanet_${exoplanetName}`);
+    const cachedAllStarsData = cache.get(`all_stars_${exoplanetName}`);
+    if (cachedExoplanetData && cachedAllStarsData) {
+        const responseData = {
+            exoplanet: cachedExoplanetData,
+            nearbyObjects: cachedAllStarsData
+        }
+        return res.json(responseData);
+    }
+
     // Construct the TAP query to fetch exoplanet details including RA and Dec
     const exoplanetQuery = `SELECT pl_name, pl_rade, sy_dist, st_teff, ra, dec FROM ps WHERE pl_name='${exoplanetName}'`;
     console.log(`Exoplanet Query: ${exoplanetQuery}`); // Log the TAP query for debugging
@@ -33,7 +46,7 @@ app.get('/exoplanet', (req, res) => {
     // TAP endpoint for synchronous queries
     const exoplanetTAPUrl = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=${encodeURIComponent(exoplanetQuery)}&format=csv`;
     console.log(exoplanetTAPUrl);
-    
+
     // Fetch exoplanet data
     request(exoplanetTAPUrl, (error, response, body) => {
         if (error) {
@@ -52,7 +65,27 @@ app.get('/exoplanet', (req, res) => {
             const [pl_name, pl_rade, sy_dist, st_teff, ra, dec] = row.split(',');
             return { pl_name, pl_rade, sy_dist, st_teff, ra: parseFloat(ra), dec: parseFloat(dec) };
         })[0]; // Get the first result (assuming unique names)
+        cache.set(`exoplanet_${exoplanetName}`, exoplanetDetails);
 
+            // Check cache for all stars and planets data
+            const cachedAllStarsData = cache.get('all_stars');
+            if (cachedAllStarsData) {
+                // If we have cached data, use it to find nearby objects
+                const nearbyObjects = cachedAllStarsData.filter(star => {
+                    const distance = calculateDistance(exoplanetDetails.ra, exoplanetDetails.dec, star.ra, star.dec);
+                    return distance <= 1000; // Set distance limit
+                });
+
+                // Combine results
+                const responseData = {
+                    exoplanet: exoplanetDetails,
+                    nearbyObjects: nearbyObjects
+                };
+
+                // Send the combined data back to the frontend
+                res.json(responseData);
+                return;
+            }
         if (!exoplanetDetails) {
             return res.status(404).send('No details found for the specified exoplanet.');
         }
@@ -83,7 +116,7 @@ app.get('/exoplanet', (req, res) => {
             });
 
             // Find nearby stars and planets based on distance from the exoplanet
-            const nearbyDistanceLimit = 1000; // Distance limit in kilometers, adjust as needed
+            const nearbyDistanceLimit = 100000;
             const nearbyObjects = allStars.filter(star => {
                 const distance = calculateDistance(exoplanetDetails.ra, exoplanetDetails.dec, star.ra, star.dec);
                 return distance <= nearbyDistanceLimit;
@@ -94,7 +127,7 @@ app.get('/exoplanet', (req, res) => {
                 exoplanet: exoplanetDetails,
                 nearbyObjects: nearbyObjects
             };
-
+            cache.set(`all_stars_${exoplanetName}`, nearbyObjects);
             // Send the combined data back to the frontend
             res.json(responseData);
         });

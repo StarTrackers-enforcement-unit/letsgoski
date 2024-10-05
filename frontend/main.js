@@ -41,7 +41,7 @@ audioLoader.load('/music.mp3', (buffer) => {
 });
 
 // Skybox
-const skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
+const skyboxGeometry = new THREE.BoxGeometry(100000, 100000, 100000);
 const skyboxMaterial = new THREE.MeshBasicMaterial({
     color: 0x000000,
     side: THREE.BackSide
@@ -50,20 +50,42 @@ const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 scene.add(skybox);
 
 // Star field
+// Create the stars geometry and material
 const starsGeometry = new THREE.BufferGeometry();
-const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+const starsMaterial = new THREE.PointsMaterial({ 
+    vertexColors: true,   // Enable vertex colors
+    size: 20, 
+    sizeAttenuation: true 
+});
 
+// Generate vertices and colors for the stars
 const starsVertices = [];
-/* for (let i = 0; i < 10000; i++) {
-    const x = THREE.MathUtils.randFloatSpread(1000);
-    const y = THREE.MathUtils.randFloatSpread(1000);
-    const z = THREE.MathUtils.randFloatSpread(1000);
-    starsVertices.push(x, y, z);
-} */
+const starColors = [];
+const color = new THREE.Color();
 
-starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 2));
+for (let i = 0; i < 50000; i++) {
+    const x = THREE.MathUtils.randFloatSpread(100000);
+    const y = THREE.MathUtils.randFloatSpread(100000);
+    const z = THREE.MathUtils.randFloatSpread(100000);
+    starsVertices.push(x, y, z);
+
+    // Random cool colors (shades of blue, purple, white)
+    color.setHSL(THREE.MathUtils.randFloat(0.5, 0.75), 1.0, THREE.MathUtils.randFloat(0.5, 1.0));  // Cool color range (0.5 to 0.75 HSL)
+    starColors.push(color.r, color.g, color.b);
+}
+
+starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+starsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+
 const starField = new THREE.Points(starsGeometry, starsMaterial);
 scene.add(starField);
+
+// Function to clear stars from the scene
+function clearFakeStars() {
+    scene.remove(starField); // Remove from scene
+    starsGeometry.dispose(); // Dispose of geometry
+    starsMaterial.dispose(); // Dispose of material
+}
 
 // Raycaster for mouse interaction
 const raycaster = new THREE.Raycaster();
@@ -118,6 +140,7 @@ async function loadExoplanet() {
 
 
 function clearPreviousVisualizations() {
+    clearFakeStars();
     planets.forEach(planet => scene.remove(planet));
     nearbyStars.forEach(star => scene.remove(star));
     planets = [];
@@ -205,7 +228,7 @@ function animate() {
 
     // Update planet positions
     updatePlanetPositions(planets);
-    updatePlanetPositions(nearbyStars);
+    updatePlanetPositions(nearbyStars); 
 
     renderer.render(scene, camera);
 }
@@ -217,7 +240,7 @@ function visualizeExoplanets(planetData, nearbyObjects) {
     clearPreviousVisualizations();
 
     // Visualize the main exoplanet
-    const color = getColorByTemperature(parseFloat(planetData.st_teff) || 7500);
+    const color = 0x50C878;
     const radius = Math.max(parseFloat(planetData.pl_rade) * 10, 1); // Scale radius for visibility
     const sphere = createPlanetSphere(radius, color);
     
@@ -249,7 +272,6 @@ function visualizeNearbyObjects(nearbyObjects) {
 
 function updatePlanetPositions(objects) {
     objects.forEach(object => {
-        console.log(object)
         const { orbitRadius, orbitSpeed, inclination } = object.userData;
         if (orbitRadius && orbitSpeed) {
             const time = Date.now() * orbitSpeed;
@@ -280,6 +302,7 @@ function addAxisHelper() {
 window.addEventListener('mousemove', onMouseMove, false);
 window.addEventListener('resize', onWindowResize, false);
 document.getElementById('loadButton').addEventListener('click', loadExoplanet);
+/* document.getElementById('perspectiveButton').addEventListener('click', togglePerspective); */
 
 // Initialize
 addAxisHelper();
