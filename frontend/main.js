@@ -91,7 +91,7 @@ function clearFakeStars() {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// Tooltip setup
+/* // Tooltip setup
 const tooltip = document.createElement('div');
 tooltip.style.position = 'absolute';
 tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
@@ -101,7 +101,7 @@ tooltip.style.borderRadius = '5px';
 tooltip.style.display = 'none';
 tooltip.style.pointerEvents = 'none';
 document.body.appendChild(tooltip);
-
+ */
 let planets = [];
 let nearbyStars = [];
 
@@ -192,43 +192,14 @@ function getColorByTemperature(temp) {
     return 0xADD8E6; // Blue
 }
 
-function onMouseMove(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children);
-
-    if (intersects.length > 0) {
-        const object = intersects[0].object;
-        if (object.userData && (object.userData.type === "planet" || object.userData.type === "nearbyPlanet")) {
-            displayTooltip(event, object.userData);
-        }
-    } else {
-        tooltip.style.display = 'none';
-    }
-}
-
-function displayTooltip(event, data) {
-    let tooltipContent = '';
-    tooltipContent += `<strong>${data.pl_name.replace(/"/g, '')}</strong><br>`;
-    if (data.pl_rade) tooltipContent += `Radius: ${parseFloat(data.pl_rade).toFixed(2)} Earth radii<br>`;
-    tooltipContent += `Distance: ${parseFloat(data.sy_dist).toFixed(2)} parsecs<br>`;
-    if (data.st_teff) tooltipContent += `Star Temperature: ${parseFloat(data.st_teff).toFixed(0)} K`;
-    
-    tooltip.innerHTML = tooltipContent;
-    tooltip.style.left = event.clientX + 10 + 'px';
-    tooltip.style.top = event.clientY + 10 + 'px';
-    tooltip.style.display = 'block';
-}
 
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
 
     // Update planet positions
-    updatePlanetPositions(planets);
-    updatePlanetPositions(nearbyStars); 
+   /*  updatePlanetPositions(planets);
+    updatePlanetPositions(nearbyStars);  */
 
     renderer.render(scene, camera);
 }
@@ -244,8 +215,10 @@ function visualizeExoplanets(planetData, nearbyObjects) {
     const radius = Math.max(parseFloat(planetData.pl_rade) * 10, 1); // Scale radius for visibility
     const sphere = createPlanetSphere(radius, color);
     
-    // Assign inclination from planet data
-    sphere.userData = { ...planetData, type: "planet", inclination: parseFloat(planetData.dec) || 0 }; 
+    // Position the main planet at the center
+    sphere.position.set(0, 0, 0);
+    
+    sphere.userData = { ...planetData, type: "planet" }; 
     scene.add(sphere);
     planets.push(sphere);
 
@@ -258,16 +231,74 @@ function visualizeExoplanets(planetData, nearbyObjects) {
 }
 
 function visualizeNearbyObjects(nearbyObjects) {
-    nearbyObjects.forEach((nearbyPlanet, index) => {
-        const color = getColorByTemperature(parseFloat(nearbyPlanet.st_teff) || 3000);
-        const nearbySphere = createPlanetSphere(2, color);
+    const skyRadius = 1000; // Large radius to simulate sky-like distribution
+    const maxObjects = 10000; // Limit the number of objects to render
+
+    // Create a single geometry and material for all nearby objects
+    const geometry = new THREE.SphereGeometry(1, 8, 8); // Reduced segment count
+    const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    // Create a single BufferGeometry for all connecting lines
+    /* const lineGeometry = new THREE.BufferGeometry();
+    const linePositions = [];
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1 });
+ */
+    nearbyObjects.slice(0, maxObjects).forEach((nearbyPlanet) => {
+        const mesh = new THREE.Mesh(geometry, material);
         
+        // Use the object's properties to determine its position
+        const ra = THREE.MathUtils.degToRad(parseFloat(nearbyPlanet.ra) || 0);
+        const dec = THREE.MathUtils.degToRad(parseFloat(nearbyPlanet.dec) || 0);
         
-        const inclination = parseFloat(nearbyPlanet.dec) || 0;
-        nearbySphere.userData = { ...nearbyPlanet, type: "nearbyPlanet", orbitRadius: 20 + (index + 1) * 15, orbitSpeed: 0.001 / (index + 1), inclination };
-        scene.add(nearbySphere);
-        nearbyStars.push(nearbySphere);
+        // Convert RA and Dec to Cartesian coordinates
+        mesh.position.set(
+            -skyRadius * Math.cos(dec) * Math.cos(ra),
+            skyRadius * Math.sin(dec),
+            skyRadius * Math.cos(dec) * Math.sin(ra)
+        );
+        
+        mesh.userData = { name: nearbyPlanet.pl_name || "Unknown", type: "nearbyPlanet" };
+        scene.add(mesh);
+        nearbyStars.push(mesh);
+
+        // Add line positions
+       /*  linePositions.push(0, 0, 0, mesh.position.x, mesh.position.y, mesh.position.z); */
     });
+
+    // Create a single line object for all connecting lines
+    /* lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+    scene.add(lines); */
+
+    // Add event listener for showing object names on hover
+    window.addEventListener('mousemove', onMouseMove);
+}
+
+// Update the onMouseMove function to show object names
+function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(nearbyStars);
+
+    if (intersects.length > 0) {
+        const object = intersects[0].object;
+        displayTooltip(event, object.userData);
+    } else {
+        hideTooltip();
+    }
+}
+
+function displayTooltip(event, data) {
+    tooltip.textContent = data.name;
+    tooltip.style.left = event.clientX + 10 + 'px';
+    tooltip.style.top = event.clientY + 10 + 'px';
+    tooltip.style.display = 'block';
+}
+
+function hideTooltip() {
+    tooltip.style.display = 'none';
 }
 
 function updatePlanetPositions(objects) {
@@ -299,7 +330,7 @@ function addAxisHelper() {
 }
 
 // Event listeners
-window.addEventListener('mousemove', onMouseMove, false);
+const tooltip = document.getElementById('tooltip');
 window.addEventListener('resize', onWindowResize, false);
 document.getElementById('loadButton').addEventListener('click', loadExoplanet);
 /* document.getElementById('perspectiveButton').addEventListener('click', togglePerspective); */

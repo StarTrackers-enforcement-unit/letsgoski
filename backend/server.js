@@ -9,15 +9,15 @@ const app = express();
 // Enable CORS for all requests
 app.use(cors());
 
-// Utility function to calculate distance between two celestial objects using RA and Dec
-const calculateDistance = (ra1, dec1, ra2, dec2) => {
+// Utility function to calculate angular distance between two celestial objects using RA and Dec
+const calculateAngularDistance = (ra1, dec1, ra2, dec2) => {
     const toRadians = (degrees) => degrees * (Math.PI / 180);
     const dRa = toRadians(ra2 - ra1);
     const dDec = toRadians(dec2 - dec1);
     const a = Math.sin(dDec / 2) ** 2 + Math.cos(toRadians(dec1)) * Math.cos(toRadians(dec2)) * Math.sin(dRa / 2) ** 2;
     const c = 2 * Math.asin(Math.sqrt(a));
-    const distance = 6371 * c; // Distance in kilometers (using Earth's radius)
-    return distance; // Return distance
+    const distanceInDegrees = c * (180 / Math.PI); // Convert radians to degrees
+    return distanceInDegrees; // Return angular distance in degrees
 };
 
 // Proxy route to fetch exoplanet data and nearby stars and planets
@@ -35,7 +35,7 @@ app.get('/exoplanet', (req, res) => {
         const responseData = {
             exoplanet: cachedExoplanetData,
             nearbyObjects: cachedAllStarsData
-        }
+        };
         return res.json(responseData);
     }
 
@@ -67,25 +67,6 @@ app.get('/exoplanet', (req, res) => {
         })[0]; // Get the first result (assuming unique names)
         cache.set(`exoplanet_${exoplanetName}`, exoplanetDetails);
 
-            // Check cache for all stars and planets data
-            const cachedAllStarsData = cache.get('all_stars');
-            if (cachedAllStarsData) {
-                // If we have cached data, use it to find nearby objects
-                const nearbyObjects = cachedAllStarsData.filter(star => {
-                    const distance = calculateDistance(exoplanetDetails.ra, exoplanetDetails.dec, star.ra, star.dec);
-                    return distance <= 1000; // Set distance limit
-                });
-
-                // Combine results
-                const responseData = {
-                    exoplanet: exoplanetDetails,
-                    nearbyObjects: nearbyObjects
-                };
-
-                // Send the combined data back to the frontend
-                res.json(responseData);
-                return;
-            }
         if (!exoplanetDetails) {
             return res.status(404).send('No details found for the specified exoplanet.');
         }
@@ -115,11 +96,11 @@ app.get('/exoplanet', (req, res) => {
                 return { pl_name, sy_dist: parseFloat(sy_dist), st_teff, ra: parseFloat(ra), dec: parseFloat(dec) };
             });
 
-            // Find nearby stars and planets based on distance from the exoplanet
-            const nearbyDistanceLimit = 100000;
+            // Set a reasonable angular distance limit (e.g., 2 degrees)
+            const nearbyDistanceLimitDegrees = 20; // Angular distance in degrees
             const nearbyObjects = allStars.filter(star => {
-                const distance = calculateDistance(exoplanetDetails.ra, exoplanetDetails.dec, star.ra, star.dec);
-                return distance <= nearbyDistanceLimit;
+                const angularDistance = calculateAngularDistance(exoplanetDetails.ra, exoplanetDetails.dec, star.ra, star.dec);
+                return angularDistance <= nearbyDistanceLimitDegrees;
             });
 
             // Combine results
@@ -128,6 +109,7 @@ app.get('/exoplanet', (req, res) => {
                 nearbyObjects: nearbyObjects
             };
             cache.set(`all_stars_${exoplanetName}`, nearbyObjects);
+
             // Send the combined data back to the frontend
             res.json(responseData);
         });
