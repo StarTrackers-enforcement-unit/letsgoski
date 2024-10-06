@@ -2,7 +2,7 @@ const express = require('express');
 const request = require('request');
 const cors = require('cors');
 const NodeCache = require('node-cache'); // Import Node-cache
-const cache = new NodeCache({ stdTTL: 600 }); // Cache entries will expire after 600 seconds (10 minutes)
+const cache = new NodeCache({ stdTTL: 6000 }); // Cache entries will expire after 600 seconds (10 minutes)
 
 const app = express();
 
