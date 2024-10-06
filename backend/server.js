@@ -116,7 +116,7 @@ app.get('/exoplanet', (req, res) => {
             });
 
             // Find nearby stars and planets based on distance from the exoplanet
-            const nearbyDistanceLimit = 10000000s000000;
+            const nearbyDistanceLimit = 10000000000000;
             const nearbyObjects = allStars.filter(star => {
                 const distance = calculateDistance(exoplanetDetails.ra, exoplanetDetails.dec, star.ra, star.dec);
                 return distance <= nearbyDistanceLimit;
