@@ -117,7 +117,7 @@ async function loadExoplanet() {
     const planetName = document.getElementById('planetName').value;
     if (planetName) {
         try {
-            const response = await fetch(`http://localhost:3000/exoplanet?name=${planetName}`);
+            const response = await fetch(`https://nasacdn.smartlinux.xyz/exoplanet?name=${planetName}`);
             const jsonData = await response.json();
 
             if (jsonData.exoplanet) {
