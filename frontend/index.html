@@ -29,7 +29,8 @@
             border-radius: 12px;
             text-align: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: top 0.5s, left 0.5s; /* Smooth transition */
+            transition: top 0.5s, left 0.5s;
+            /* Smooth transition */
         }
 
         /* Header styling */
@@ -127,6 +128,20 @@
                 font-size: 13px;
             }
         }
+
+        #infos {
+            display: none;
+            position: fixed;
+            bottom: 10px;
+            /* Changed from top to bottom */
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1000;
+        }
     </style>
 </head>
 
@@ -137,6 +152,7 @@
         <button id="loadButton">Load Exoplanet</button>
         <button id="perspectiveButton">Change perspective</button>
     </div>
+    <div id="infos"></div>
     <div id="tooltip"></div>
     <script type="module" src="main.js"></script>
 </body>

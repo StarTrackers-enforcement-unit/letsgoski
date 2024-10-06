@@ -86,7 +86,7 @@ camera.position.set(11000, 5000, 1000);
 // Raycaster for mouse interaction
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-
+hideInfo();
 let planets = [];
 let nearbyStars = [];
 
@@ -209,7 +209,7 @@ function visualizeExoplanets(planetData, nearbyObjects) {
     clearPreviousVisualizations();
     moveToTopLeft();
     const radius = Math.max(parseFloat(planetData.pl_rade) * 10, 1); // Scale radius for visibility
-
+    showInfo(planetData.pl_name, planetData.pl_rade, planetData.sy_dist);
     // Use the path to your texture image and normal map
     const planetTexturePath = '/moon.jpg';
     const normalMapPath = '/normal.jpg';
@@ -287,7 +287,17 @@ function hideTooltip() {
     const tooltip = document.getElementById('tooltip');
     tooltip.style.display = 'none';
 }
-
+function showInfo(name, size, dist) {
+    const info = document.getElementById('infos');
+    info.style.display = 'block';
+    info.innerHTML = 'Exoplanet name: ' + name
+        + '<br>Exoplanet size (in earth Radius): ' + size
+        + '<br>Distance from Earth: ' + dist + ' parsecs';
+}
+function hideInfo() {
+    const info = document.getElementById('infos');
+    info.style.display = 'none';
+}
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
