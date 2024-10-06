@@ -4,7 +4,7 @@ A web-based interactive 3D visualization of the galaxy, allowing users to explor
 Made for the Nasa Space apps challenge 2024 in Rome.
 
 # LIVE DEMO (https://letsgosky.smartlinux.xyz/)
-# PRESENTATION (https://github.com/StarTrackers-enforcement-unit/letsgoski/presentation.pdf)
+# PRESENTATION (https://github.com/StarTrackers-enforcement-unit/letsgoski/blob/main/presentation.pdf)
 
 ## Features
 
