@@ -4,6 +4,7 @@ A web-based interactive 3D visualization of the galaxy, allowing users to explor
 Made for the Nasa Space apps challenge 2024 in Rome.
 
 # LIVE DEMO (https://letsgosky.smartlinux.xyz/)
+# PRESENTATION (https://github.com/StarTrackers-enforcement-unit/letsgoski/presentation.pdf)
 
 ## Features
 
@@ -16,7 +17,7 @@ Made for the Nasa Space apps challenge 2024 in Rome.
 
 ### Backend
 
-1. Clone the repository: `git clone https://github.com/your-username/letsgoski.git`
+1. Clone the repository: `git clone https://github.com/StarTrackers-enforcement-unit/letsgoski.git`
 2. Install dependencies: `cd backend && npm install`
 3. Start the server: `node server.js`
 4. Open the application in your web browser: `http://localhost:3000`
