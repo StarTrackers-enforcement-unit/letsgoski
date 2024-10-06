@@ -291,7 +291,7 @@ function showInfo(name, size, dist) {
     const info = document.getElementById('infos');
     info.style.display = 'block';
     info.innerHTML = 'Exoplanet name: ' + name
-        + '<br>Exoplanet size (in earth Radius): ' + size
+        + '<br>Exoplanet size (in Earth radii): ' + size
         + '<br>Distance from Earth: ' + dist + ' parsecs';
 }
 function hideInfo() {
