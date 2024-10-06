@@ -82,7 +82,7 @@ starsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors,
 
 const starField = new THREE.Points(starsGeometry, starsMaterial);
 scene.add(starField);
-
+camera.position.set(11000, 5000, 1000);
 // Raycaster for mouse interaction
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -131,6 +131,7 @@ function clearPreviousVisualizations() {
     nearbyStars.forEach(star => scene.remove(star));
     planets = [];
     nearbyStars = [];
+    camera.position.set(110, 50, 10);
 }
 
 function createPlanetSphere(radius, color, texturePath = null, normalMapPath = null) {
@@ -197,11 +198,16 @@ function setupLighting() {
     directionalLight.position.set(1, 1, 1).normalize();
     scene.add(directionalLight);
 }
+function moveToTopLeft() {
+    const controls = document.getElementById('controls');
+    controls.style.top = '10px'; // Adjust as needed
+    controls.style.left = '10px'; // Adjust as needed
+}
 function visualizeExoplanets(planetData, nearbyObjects) {
     console.log('Visualizing exoplanets:', planetData, nearbyObjects); // Debug log
 
     clearPreviousVisualizations();
-
+    moveToTopLeft();
     const radius = Math.max(parseFloat(planetData.pl_rade) * 10, 1); // Scale radius for visibility
 
     // Use the path to your texture image and normal map
