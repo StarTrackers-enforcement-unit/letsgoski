@@ -1,9 +1,9 @@
-
-
 # Let's Go Sky
 
 A web-based interactive 3D visualization of the galaxy, allowing users to explore and learn about exoplanets and nearby stars.
 Made for the Nasa Space apps challenge 2024 in Rome.
+
+# LIVE DEMO (https://letsgosky.smartlinux.xyz/)
 
 ## Features
 
