@@ -191,12 +191,12 @@ function getColorByTemperature(temp) {
     return 0xADD8E6; // Blue
 }
 function setupLighting() {
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+    const ambientLight = new THREE.AmbientLight(0x404040, 25);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    /* const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(1, 1, 1).normalize();
-    scene.add(directionalLight);
+    scene.add(directionalLight); */
 }
 function moveToTopLeft() {
     const controls = document.getElementById('controls');
