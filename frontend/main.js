@@ -133,13 +133,14 @@ function clearPreviousVisualizations() {
     nearbyStars = [];
 }
 
-function createPlanetSphere(radius, color, texturePath = null) {
+function createPlanetSphere(radius, color, texturePath = null, normalMapPath = null) {
     const geometry = new THREE.SphereGeometry(radius, 32, 32);
     
     let material;
     
+    const textureLoader = new THREE.TextureLoader();
+
     if (texturePath) {
-        const textureLoader = new THREE.TextureLoader();
         const planetTexture = textureLoader.load(texturePath);
 
         material = new THREE.MeshStandardMaterial({
@@ -149,6 +150,13 @@ function createPlanetSphere(radius, color, texturePath = null) {
             emissive: color,
             emissiveIntensity: 0.5
         });
+
+        // Add normal map if provided
+        if (normalMapPath) {
+            const normalTexture = textureLoader.load(normalMapPath);
+            material.normalMap = normalTexture;
+            material.normalScale.set(1, 1); // Adjust the intensity of the normal map
+        }
     } else {
         // Fallback to plain color if no texture is provided
         material = new THREE.MeshStandardMaterial({
@@ -164,7 +172,7 @@ function createPlanetSphere(radius, color, texturePath = null) {
 }
 
 
-function createAtmosphere(radius) {
+/* function createAtmosphere(radius) {
     const atmosphereGeometry = new THREE.SphereGeometry(radius + 0.5, 32, 32);
     const atmosphereMaterial = new THREE.MeshPhongMaterial({
         color: 0xffffff,
@@ -172,7 +180,7 @@ function createAtmosphere(radius) {
         opacity: 0.3
     });
     return new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-}
+} */
 
 function getColorByTemperature(temp) {
     if (temp < 3000) return 0x8B4513; // Brownish
@@ -181,19 +189,26 @@ function getColorByTemperature(temp) {
     if (temp < 7500) return 0xFFFFFF; // White
     return 0xADD8E6; // Blue
 }
+function setupLighting() {
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+    scene.add(ambientLight);
 
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1).normalize();
+    scene.add(directionalLight);
+}
 function visualizeExoplanets(planetData, nearbyObjects) {
     console.log('Visualizing exoplanets:', planetData, nearbyObjects); // Debug log
 
     clearPreviousVisualizations();
 
-    const color = 0x50C878;
     const radius = Math.max(parseFloat(planetData.pl_rade) * 10, 1); // Scale radius for visibility
 
-    // Use the path to your texture image
+    // Use the path to your texture image and normal map
     const planetTexturePath = '/moon.jpg';
+    const normalMapPath = '/normal.jpg';
 
-    const sphere = createPlanetSphere(radius, color, planetTexturePath); // Pass the texture path
+    const sphere = createPlanetSphere(radius, planetTexturePath, normalMapPath);
     
     sphere.position.set(0, 0, 0);
     
@@ -201,8 +216,8 @@ function visualizeExoplanets(planetData, nearbyObjects) {
     scene.add(sphere);
     planets.push(sphere);
 
-    const atmosphere = createAtmosphere(radius);
-    sphere.add(atmosphere);
+    /* const atmosphere = createAtmosphere(radius);
+    sphere.add(atmosphere); */
 
     // Position first-person camera on the planet surface
     fpCamera.position.set(0, radius + 0.1, 0);
@@ -292,6 +307,17 @@ function togglePerspective() {
 
 function animate() {
     requestAnimationFrame(animate);
+    
+    // Rotate the planet
+    if (planets.length > 0) {
+        planets[0].rotation.y -= 0.001; // Adjust the rotation speed as needed
+    }
+    
+    // Rotate the first-person camera if it's active
+    if (currentCamera === fpCamera) {
+        fpCamera.rotation.y += 0.001; // Adjust the rotation speed as needed
+    }
+    
     controls.update();
     renderer.render(scene, currentCamera);
 }
@@ -302,6 +328,7 @@ document.getElementById('loadButton').addEventListener('click', loadExoplanet);
 document.getElementById('perspectiveButton').addEventListener('click', togglePerspective);
 
 // Initialize
+setupLighting();
 addAxisHelper();
 animate();
 
